@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import PurchaseForm from './components/PurchaseForm';
 import PurchaseList from './components/PurchaseList';
@@ -10,252 +10,220 @@ import ManagerLeaveRequests from './components/ManagerLeaveRequest';
 import ApprovedLeaveRequestList from './components/ApprovedLeaveRequestList';
 import ManagerPurchaseList from './components/ManagerPurchaseList';
 import CreateUser from './components/CreateUser';
+import axios from 'axios';
+
+const ORANGE = '#ff9100';
+const ORANGE_DARK = '#ff6d00';
+const WHITE = '#fff';
+const GRAY = '#fff7ed';
+const BORDER = '#ffe0b2';
+const TEXT = '#ff6d00';
 
 function App() {
+  // user'ı state olarak tut
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch {
+      return null;
+    }
+  });
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('user'));
+
+  // Login/logout sonrası user'ı güncelle
+  useEffect(() => {
+    const onStorage = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem('user')));
+        setIsLoggedIn(!!localStorage.getItem('user'));
+      } catch {
+        setUser(null);
+        setIsLoggedIn(false);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   return (
     <Router>
-      <MainContent isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      <MainContent user={user} setUser={setUser} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
     </Router>
   );
 }
 
-function MainContent({ isLoggedIn, setIsLoggedIn }) {
+function MainContent({ user, setUser, isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
   const [reload, setReload] = useState(false);
 
-  // Kullanıcı bilgisini güvenli şekilde al
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem('user'));
-  } catch {
-    user = null;
-  }
+  // userInfo'yu merkezi olarak yönet
+  const [userInfo, setUserInfo] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+  useEffect(() => {
+    if (!user?.id) {
+      setUserInfo(null);
+      setUserLoading(false);
+      return;
+    }
+    setUserLoading(true);
+    axios.get(`http://localhost:5293/api/GetUserById?userId=${user.id}`)
+      .then(res => { setUserInfo(res.data); setUserLoading(false); })
+      .catch(() => { setUserInfo(null); setUserLoading(false); });
+  }, [user?.id]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    setUser(null);
     setIsLoggedIn(false);
     navigate('/login');
   };
 
+  if (!isLoggedIn || !user) {
+    return (
+      <div style={{ minHeight: '100vh', background: GRAY }}>
+        <Routes>
+          <Route path="/login" element={<LoginPage onLoginSuccess={() => {
+            setUser(JSON.parse(localStorage.getItem('user')));
+            setIsLoggedIn(true);
+          }} />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--color-gray)',
-      padding: 0,
+      background: GRAY,
       fontFamily: 'Inter, Arial, sans-serif',
-      color: 'var(--color-text)',
+      color: TEXT,
+      display: 'flex',
     }}>
-      {isLoggedIn && user && (
-        <nav style={{
-          marginBottom: 32,
-          background: 'var(--color-orange)',
-          borderRadius: 16,
-          boxShadow: '0 4px 24px 0 rgba(255,127,26,0.10)',
-          padding: '18px 32px',
+      {/* Sidebar */}
+      <aside style={{
+        width: 260,
+        minHeight: '100vh',
+        background: WHITE,
+        borderRight: `2px solid ${BORDER}`,
+        boxShadow: '2px 0 16px 0 rgba(255,145,0,0.07)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        padding: '0 0',
+        position: 'relative',
+      }}>
+        {/* Profil alanı */}
+        <div style={{
+          padding: '32px 24px 18px 24px',
+          borderBottom: `1.5px solid ${BORDER}`,
+          background: GRAY,
           display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 12,
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 6,
         }}>
-          {/* Her rol için ortak talep oluşturma */}
-          <Link to="/create-purchase" style={navLinkStyle}>Satın Alma Talep Oluştur</Link>
-          <Link to="/view-purchase" style={navLinkStyle}>Satın Alma Taleplerim</Link>
-          <Link to="/create-leave" style={navLinkStyle}>İzin Talebi Oluştur</Link>
-          <Link to="/view-leave" style={navLinkStyle}>İzin Taleplerim</Link>
-          <Link to="/user-profile" style={navLinkStyle}>Profilim</Link>
-          {/* HR için özel menü */}
-          {user?.roleName === 'HR' && (
+          {userLoading ? (
+            <div style={{ color: ORANGE_DARK, fontWeight: 600, fontSize: 16 }}>Yükleniyor...</div>
+          ) : userInfo ? (
             <>
-              <Link to="/approved-leave-requests" style={navLinkStyle}>Onay Bekleyen İzinler</Link>
-              <Link to="/create-user" style={navLinkStyle}>Kullanıcı Ekle</Link>
+              <div style={{ fontWeight: 700, fontSize: 18, color: ORANGE_DARK }}>{userInfo.firstName} {userInfo.lastName}</div>
+              <div style={{ fontSize: 15, color: ORANGE }}>{userInfo.jobTitle}</div>
             </>
-          )}
-          {/* Manager için özel menü */}
-          {user?.roleName === 'Manager' && (
-            <>
-              <Link to="/manager-leave-requests" style={navLinkStyle}>Yönetici İzin Talepleri</Link>
-              <Link to="/manager-purchase-requests" style={navLinkStyle}>Satın Alma Talepleri (Yönetici)</Link>
-            </>
+          ) : (
+            <div style={{ color: ORANGE_DARK, fontWeight: 600, fontSize: 16 }}>Kullanıcı bulunamadı</div>
           )}
           <button onClick={handleLogout} style={{
-            background: 'var(--color-orange-dark)',
-            color: 'var(--color-white)',
+            background: ORANGE_DARK,
+            color: WHITE,
             border: 'none',
             borderRadius: 8,
-            padding: '10px 24px',
-            fontWeight: 700,
+            padding: '7px 18px',
+            fontWeight: 600,
             fontSize: 15,
             cursor: 'pointer',
-            marginLeft: 'auto',
-            boxShadow: '0 2px 8px 0 rgba(255,127,26,0.10)',
+            marginTop: 10,
+            boxShadow: '0 2px 8px 0 rgba(255,145,0,0.10)',
             transition: 'background 0.2s',
           }}>Çıkış Yap</button>
+        </div>
+        {/* Menü linkleri */}
+        <nav style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          padding: '24px 0 0 0',
+        }}>
+          <SidebarLink to="/user-profile" label="Profilim" />
+          <SidebarLink to="/create-purchase" label="Satın Alma Talep Oluştur" />
+          <SidebarLink to="/view-purchase" label="Satın Alma Taleplerim" />
+          <SidebarLink to="/create-leave" label="İzin Talebi Oluştur" />
+          <SidebarLink to="/view-leave" label="İzin Taleplerim" />
+          {user?.roleName === 'HR' && (
+            <>
+              <SidebarLink to="/approved-leave-requests" label="Onay Bekleyen İzinler" />
+              <SidebarLink to="/create-user" label="Kullanıcı Ekle" />
+            </>
+          )}
+          {user?.roleName === 'Manager' && (
+            <>
+              <SidebarLink to="/manager-leave-requests" label="Yönetici İzin Talepleri" />
+              <SidebarLink to="/manager-purchase-requests" label="Satın Alma Talepleri (Yönetici)" />
+            </>
+          )}
         </nav>
-      )}
-
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px' }}>
-        <Routes>
-          {/* Login */}
-          <Route
-            path="/login"
-            element={
-              isLoggedIn ? (
-                <Navigate to="/user-profile" />
-              ) : (
-                <LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />
-              )
-            }
-          />
-
-          {/* Talep oluşturma sayfası (her rol için açık) */}
-          <Route
-            path="/create-purchase"
-            element={
-              isLoggedIn ? (
-                <PurchaseForm onSuccess={() => setReload(prev => !prev)} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          {/* Staff Talepleri */}
-          <Route
-            path="/view-purchase"
-            element={
-              isLoggedIn ? (
-                <PurchaseList reload={reload} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          {/* Ana Sayfa Yönlendirmesi */}
-          <Route
-            path="/"
-            element={
-              isLoggedIn ? (
-                <Navigate to="/user-profile" />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          <Route
-            path="/user-profile"
-            element={
-              isLoggedIn ? (
-                <UserProfile />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          <Route
-            path="/create-leave"
-            element={
-              isLoggedIn ? <LeaveRequestForm /> : <Navigate to="/login" />
-            }
-          />
-
-          <Route
-            path="/view-leave"
-            element={
-              isLoggedIn ? <LeaveRequestList /> : <Navigate to="/login" />
-            }
-          />
-
-          <Route
-            path="/manager-leave-requests"
-            element={
-              isLoggedIn && user?.roleName === 'Manager' ? (
-                <ManagerLeaveRequests />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          {/* HR için onay bekleyen izinler */}
-          <Route
-            path="/approved-leave-requests"
-            element={
-              isLoggedIn && user?.roleName === 'HR' ? (
-                <ApprovedLeaveRequestList />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          {/* Manager için satın alma talepleri */}
-          <Route
-            path="/manager-purchase-requests"
-            element={
-              isLoggedIn && user?.roleName === 'Manager' ? (
-                <ManagerPurchaseList />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          {/* HR için kullanıcı ekleme */}
-          <Route
-            path="/create-user"
-            element={
-              isLoggedIn && user?.roleName === 'HR' ? (
-                <CreateUser />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-        </Routes>
-      </div>
+      </aside>
+      {/* Sayfa içeriği */}
+      <main style={{
+        flex: 1,
+        minHeight: '100vh',
+        background: GRAY,
+        padding: '0 0 0 0',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 0 24px', width: '100%' }}>
+          <Routes>
+            <Route path="/user-profile" element={<UserProfile userInfo={userInfo} />} />
+            <Route path="/create-purchase" element={<PurchaseForm onSuccess={() => setReload(prev => !prev)} userInfo={userInfo} />} />
+            <Route path="/view-purchase" element={<PurchaseList reload={reload} userInfo={userInfo} />} />
+            <Route path="/create-leave" element={<LeaveRequestForm userInfo={userInfo} />} />
+            <Route path="/view-leave" element={<LeaveRequestList userInfo={userInfo} />} />
+            <Route path="/manager-leave-requests" element={user?.roleName === 'Manager' ? <ManagerLeaveRequests userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/approved-leave-requests" element={user?.roleName === 'HR' ? <ApprovedLeaveRequestList userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/manager-purchase-requests" element={user?.roleName === 'Manager' ? <ManagerPurchaseList userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/create-user" element={user?.roleName === 'HR' ? <CreateUser userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/user-profile" />} />
+          </Routes>
+        </div>
+      </main>
     </div>
   );
 }
 
-const navLinkStyle = {
-  color: 'var(--color-white)',
-  background: 'transparent',
-  fontWeight: 600,
-  fontSize: 15,
-  padding: '8px 18px',
-  borderRadius: 8,
-  textDecoration: 'none',
-  transition: 'background 0.2s, color 0.2s',
-  marginRight: 6,
-  display: 'inline-block',
-};
-
-const logoutBtnStyle = {
-  background: 'var(--destructive)',
-  color: 'var(--destructive-foreground)',
-  border: 'none',
-  borderRadius: 8,
-  padding: '8px 16px',
-  fontWeight: 600,
-  fontSize: 15,
-  cursor: 'pointer',
-  marginLeft: 8,
-  boxShadow: 'var(--shadow-md)',
-  transition: 'background 0.2s',
-};
-
-const panelTitleStyle = {
-  color: 'var(--foreground)',
-  textAlign: 'center',
-  margin: '40px 0 24px 0',
-  fontWeight: 700,
-  letterSpacing: 1,
-  fontSize: 28,
-};
+function SidebarLink({ to, label }) {
+  return (
+    <Link
+      to={to}
+      style={{
+        color: TEXT,
+        background: 'none',
+        border: 'none',
+        borderLeft: `4px solid transparent`,
+        borderRadius: 0,
+        padding: '12px 28px',
+        fontWeight: 600,
+        fontSize: 16,
+        textDecoration: 'none',
+        transition: 'background 0.2s, color 0.2s, border 0.2s',
+        marginBottom: 2,
+        display: 'block',
+      }}
+      activeclassname="active"
+    >
+      {label}
+    </Link>
+  );
+}
 
 export default App;

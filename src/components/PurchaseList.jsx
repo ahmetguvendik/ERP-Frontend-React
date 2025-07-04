@@ -11,6 +11,10 @@ const TEXT = '#222';
 function PurchaseList({ reload }) {
   const [purchases, setPurchases] = useState([]);
   const [openDetail, setOpenDetail] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(purchases.length / itemsPerPage);
+  const paginatedPurchases = purchases.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -47,69 +51,113 @@ function PurchaseList({ reload }) {
         {purchases.length === 0 ? (
           <p style={{ color: ORANGE_DARK, textAlign: 'center' }}>Henüz talep yok.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              marginTop: '10px',
-              borderCollapse: 'collapse',
-              background: 'none',
-            }}>
-              <thead>
-                <tr style={{ background: ORANGE + '11' }}>
-                  <th style={thStyle}>Talep Nedeni</th>
-                  <th style={thStyle}>Tarih</th>
-                  <th style={thStyle}>Durum</th>
-                  <th style={thStyle}>Detay</th>
-                </tr>
-              </thead>
-              <tbody>
-                {purchases.map((purchase, index) => (
-                  <React.Fragment key={purchase.id || index}>
-                    <tr style={{ background: index % 2 === 0 ? GRAY : WHITE }}>
-                      <td style={tdStyle}>{purchase.reason}</td>
-                      <td style={tdStyle}>{new Date(purchase.createdAt).toLocaleDateString()}</td>
-                      <td style={tdStyle}>{purchase.status || purchase.statues}</td>
-                      <td style={tdStyle}>
-                        <button
-                          style={detailBtnStyle}
-                          onClick={() => setOpenDetail(openDetail === purchase.id ? null : purchase.id)}
-                        >
-                          {openDetail === purchase.id ? 'Kapat' : 'Detay'}
-                        </button>
-                      </td>
-                    </tr>
-                    {openDetail === purchase.id && (
-                      <tr>
-                        <td colSpan={4} style={{ background: GRAY, padding: 0 }}>
-                          <div style={{ padding: '18px 24px' }}>
-                            <h4 style={{ color: ORANGE_DARK, marginBottom: 10, fontWeight: 600 }}>Ürünler</h4>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', background: 'none' }}>
-                              <thead>
-                                <tr>
-                                  <th style={miniThStyle}>Ürün</th>
-                                  <th style={miniThStyle}>Adet</th>
-                                  <th style={miniThStyle}>Açıklama</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {(purchase.items || []).map((item, i) => (
-                                  <tr key={i}>
-                                    <td style={miniTdStyle}>{item.productName}</td>
-                                    <td style={miniTdStyle}>{item.quantity}</td>
-                                    <td style={miniTdStyle}>{item.description}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                marginTop: '10px',
+                borderCollapse: 'collapse',
+                background: 'none',
+              }}>
+                <thead>
+                  <tr style={{ background: ORANGE + '11' }}>
+                    <th style={thStyle}>Talep Nedeni</th>
+                    <th style={thStyle}>Tarih</th>
+                    <th style={thStyle}>Durum</th>
+                    <th style={thStyle}>Detay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPurchases.map((purchase, index) => (
+                    <React.Fragment key={purchase.id || index}>
+                      <tr style={{ background: index % 2 === 0 ? GRAY : WHITE }}>
+                        <td style={tdStyle}>{purchase.reason}</td>
+                        <td style={tdStyle}>{new Date(purchase.createdAt).toLocaleDateString()}</td>
+                        <td style={tdStyle}>{purchase.status || purchase.statues}</td>
+                        <td style={tdStyle}>
+                          <button
+                            style={detailBtnStyle}
+                            onClick={() => setOpenDetail(openDetail === purchase.id ? null : purchase.id)}
+                          >
+                            {openDetail === purchase.id ? 'Kapat' : 'Detay'}
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      {openDetail === purchase.id && (
+                        <tr>
+                          <td colSpan={4} style={{ background: GRAY, padding: 0 }}>
+                            <div style={{ padding: '18px 24px' }}>
+                              <h4 style={{ color: ORANGE_DARK, marginBottom: 10, fontWeight: 600 }}>Ürünler</h4>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', background: 'none' }}>
+                                <thead>
+                                  <tr>
+                                    <th style={miniThStyle}>Ürün</th>
+                                    <th style={miniThStyle}>Adet</th>
+                                    <th style={miniThStyle}>Açıklama</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(purchase.items || []).map((item, i) => (
+                                    <tr key={i}>
+                                      <td style={miniTdStyle}>{item.productName}</td>
+                                      <td style={miniTdStyle}>{item.quantity}</td>
+                                      <td style={miniTdStyle}>{item.description}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 24, gap: 12 }}>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    background: WHITE,
+                    color: currentPage === 1 ? '#ffcc80' : ORANGE_DARK,
+                    border: '1.5px solid ' + ORANGE,
+                    borderRadius: 8,
+                    padding: '7px 18px',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                    transition: 'background 0.2s',
+                    opacity: currentPage === 1 ? 0.6 : 1,
+                  }}
+                >Önceki</button>
+                <span style={{ color: ORANGE_DARK, fontWeight: 600, fontSize: 16 }}>
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    background: WHITE,
+                    color: currentPage === totalPages ? '#ffcc80' : ORANGE_DARK,
+                    border: '1.5px solid ' + ORANGE,
+                    borderRadius: 8,
+                    padding: '7px 18px',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                    transition: 'background 0.2s',
+                    opacity: currentPage === totalPages ? 0.6 : 1,
+                  }}
+                >Sonraki</button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

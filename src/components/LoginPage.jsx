@@ -160,15 +160,16 @@ export default function LoginPage({ onLoginSuccess }) {
                 style={{
                   position: 'absolute',
                   right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
+                  top: 0,
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
                   padding: 0,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  height: 44,
+                  width: 32,
                 }}
                 tabIndex={-1}
               >

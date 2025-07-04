@@ -13,6 +13,10 @@ function ManagerLeaveRequests() {
   const [selectedId, setSelectedId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(requests.length / itemsPerPage);
+  const paginatedRequests = requests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Kullanıcı bilgisi
   const user = JSON.parse(localStorage.getItem('user'));
@@ -128,7 +132,7 @@ function ManagerLeaveRequests() {
               {requests.length === 0 ? (
                 <tr><td colSpan="7" style={{ textAlign: 'center', color: ORANGE_DARK }}>Bekleyen izin talebi yok</td></tr>
               ) : (
-                requests.map((r) => (
+                paginatedRequests.map((r) => (
                   <tr key={r.id} style={{ background: r.id % 2 === 0 ? GRAY : WHITE }}>
                     <td style={tdStyle}>{r.employeeName}</td>
                     <td style={tdStyle}>{requestTypeMap[r.type] || r.type}</td>
@@ -150,6 +154,48 @@ function ManagerLeaveRequests() {
             </tbody>
           </table>
         </div>
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 24, gap: 12 }}>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{
+                background: WHITE,
+                color: currentPage === 1 ? '#ffcc80' : ORANGE_DARK,
+                border: '1.5px solid ' + ORANGE,
+                borderRadius: 8,
+                padding: '7px 18px',
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                transition: 'background 0.2s',
+                opacity: currentPage === 1 ? 0.6 : 1,
+              }}
+            >Önceki</button>
+            <span style={{ color: ORANGE_DARK, fontWeight: 600, fontSize: 16 }}>
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{
+                background: WHITE,
+                color: currentPage === totalPages ? '#ffcc80' : ORANGE_DARK,
+                border: '1.5px solid ' + ORANGE,
+                borderRadius: 8,
+                padding: '7px 18px',
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                transition: 'background 0.2s',
+                opacity: currentPage === totalPages ? 0.6 : 1,
+              }}
+            >Sonraki</button>
+          </div>
+        )}
         {showRejectModal && (
           <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

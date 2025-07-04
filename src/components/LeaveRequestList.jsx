@@ -10,6 +10,10 @@ const TEXT = 'var(--color-text)';
 
 function LeaveRequestList() {
   const [requests, setRequests] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(requests.length / itemsPerPage);
+  const paginatedRequests = requests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
@@ -41,34 +45,78 @@ function LeaveRequestList() {
         {requests.length === 0 ? (
           <p style={{ color: ORANGE_DARK, textAlign: 'center' }}>Henüz bir izin talebiniz yok.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', marginTop: '10px', borderCollapse: 'collapse', background: 'none' }}>
-              <thead>
-                <tr style={{ background: ORANGE + '11' }}>
-                  <th style={thStyle}>İzin Türü</th>
-                  <th style={thStyle}>Başlangıç</th>
-                  <th style={thStyle}>Bitiş</th>
-                  <th style={thStyle}>Yönetici</th>
-                  <th style={thStyle}>Durum</th>
-                  <th style={thStyle}>Red Nedeni</th>
-                  <th style={thStyle}>Talep Tarihi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((r, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? GRAY : WHITE }}>
-                    <td style={tdStyle}>{requestTypeMap[r.type] || 'Bilinmeyen İzin'}</td>
-                    <td style={tdStyle}>{formatDate(r.startDate)}</td>
-                    <td style={tdStyle}>{formatDate(r.endDate)}</td>
-                    <td style={tdStyle}>{r.managerName}</td>
-                    <td style={tdStyle}>{r.status}</td>
-                    <td style={tdStyle}>{r.rejectionReason || '-'}</td>
-                    <td style={tdStyle}>{formatDate(r.createdAt)}</td>
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', marginTop: '10px', borderCollapse: 'collapse', background: 'none' }}>
+                <thead>
+                  <tr style={{ background: ORANGE + '11' }}>
+                    <th style={thStyle}>İzin Türü</th>
+                    <th style={thStyle}>Başlangıç</th>
+                    <th style={thStyle}>Bitiş</th>
+                    <th style={thStyle}>Yönetici</th>
+                    <th style={thStyle}>Durum</th>
+                    <th style={thStyle}>Red Nedeni</th>
+                    <th style={thStyle}>Talep Tarihi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedRequests.map((r, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? GRAY : WHITE }}>
+                      <td style={tdStyle}>{requestTypeMap[r.type] || 'Bilinmeyen İzin'}</td>
+                      <td style={tdStyle}>{formatDate(r.startDate)}</td>
+                      <td style={tdStyle}>{formatDate(r.endDate)}</td>
+                      <td style={tdStyle}>{r.managerName}</td>
+                      <td style={tdStyle}>{r.status}</td>
+                      <td style={tdStyle}>{r.rejectionReason || '-'}</td>
+                      <td style={tdStyle}>{formatDate(r.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 24, gap: 12 }}>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    background: WHITE,
+                    color: currentPage === 1 ? '#ffcc80' : ORANGE_DARK,
+                    border: '1.5px solid ' + ORANGE,
+                    borderRadius: 8,
+                    padding: '7px 18px',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                    transition: 'background 0.2s',
+                    opacity: currentPage === 1 ? 0.6 : 1,
+                  }}
+                >Önceki</button>
+                <span style={{ color: ORANGE_DARK, fontWeight: 600, fontSize: 16 }}>
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    background: WHITE,
+                    color: currentPage === totalPages ? '#ffcc80' : ORANGE_DARK,
+                    border: '1.5px solid ' + ORANGE,
+                    borderRadius: 8,
+                    padding: '7px 18px',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                    transition: 'background 0.2s',
+                    opacity: currentPage === totalPages ? 0.6 : 1,
+                  }}
+                >Sonraki</button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

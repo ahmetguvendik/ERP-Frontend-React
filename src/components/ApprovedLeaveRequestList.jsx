@@ -23,6 +23,10 @@ const ApprovedLeaveRequestList = () => {
   const [error, setError] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(leaveRequests.length / itemsPerPage);
+  const paginatedRequests = leaveRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   useEffect(() => {
     fetch('http://localhost:5293/api/LeaveRequestByApproved/LeaveRequestByApproved')
@@ -79,50 +83,94 @@ const ApprovedLeaveRequestList = () => {
         {leaveRequests.length === 0 ? (
           <p style={{ color: ORANGE_DARK, textAlign: 'center' }}>Onay bekleyen izin yok.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', marginTop: '10px', borderCollapse: 'collapse', background: 'none' }}>
-              <thead>
-                <tr style={{ background: ORANGE + '11' }}>
-                  <th style={thStyle}>Çalışan</th>
-                  <th style={thStyle}>Yönetici</th>
-                  <th style={thStyle}>Başlangıç</th>
-                  <th style={thStyle}>Bitiş</th>
-                  <th style={thStyle}>Tip</th>
-                  <th style={thStyle}>Durum</th>
-                  <th style={thStyle}>İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaveRequests.map((lr, idx) => (
-                  <tr key={lr.id} style={{ background: idx % 2 === 0 ? GRAY : WHITE }}>
-                    <td style={tdStyle}>{lr.employeeName}</td>
-                    <td style={tdStyle}>{lr.managerName}</td>
-                    <td style={tdStyle}>{new Date(lr.startDate).toLocaleDateString()}</td>
-                    <td style={tdStyle}>{new Date(lr.endDate).toLocaleDateString()}</td>
-                    <td style={tdStyle}>{LEAVE_TYPE_MAP[lr.type] || lr.type}</td>
-                    <td style={tdStyle}>{lr.status}</td>
-                    <td style={tdStyle}>
-                      <button style={approveBtnStyle} onClick={() => handleApprove(lr.id)}>Onayla</button>
-                      <button style={rejectBtnStyle} onClick={() => setRejectingId(lr.id)}>Reddet</button>
-                      {rejectingId === lr.id && (
-                        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <input
-                            type="text"
-                            placeholder="Reddetme sebebi"
-                            value={rejectionReason}
-                            onChange={e => setRejectionReason(e.target.value)}
-                            style={inputStyle}
-                          />
-                          <button style={sendBtnStyle} onClick={() => handleReject(lr.id)}>Gönder</button>
-                          <button style={cancelBtnStyle} onClick={() => { setRejectingId(null); setRejectionReason(''); }}>İptal</button>
-                        </div>
-                      )}
-                    </td>
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', marginTop: '10px', borderCollapse: 'collapse', background: 'none' }}>
+                <thead>
+                  <tr style={{ background: ORANGE + '11' }}>
+                    <th style={thStyle}>Çalışan</th>
+                    <th style={thStyle}>Yönetici</th>
+                    <th style={thStyle}>Başlangıç</th>
+                    <th style={thStyle}>Bitiş</th>
+                    <th style={thStyle}>Tip</th>
+                    <th style={thStyle}>Durum</th>
+                    <th style={thStyle}>İşlem</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedRequests.map((lr, idx) => (
+                    <tr key={lr.id} style={{ background: idx % 2 === 0 ? GRAY : WHITE }}>
+                      <td style={tdStyle}>{lr.employeeName}</td>
+                      <td style={tdStyle}>{lr.managerName}</td>
+                      <td style={tdStyle}>{new Date(lr.startDate).toLocaleDateString()}</td>
+                      <td style={tdStyle}>{new Date(lr.endDate).toLocaleDateString()}</td>
+                      <td style={tdStyle}>{LEAVE_TYPE_MAP[lr.type] || lr.type}</td>
+                      <td style={tdStyle}>{lr.status}</td>
+                      <td style={tdStyle}>
+                        <button style={approveBtnStyle} onClick={() => handleApprove(lr.id)}>Onayla</button>
+                        <button style={rejectBtnStyle} onClick={() => setRejectingId(lr.id)}>Reddet</button>
+                        {rejectingId === lr.id && (
+                          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <input
+                              type="text"
+                              placeholder="Reddetme sebebi"
+                              value={rejectionReason}
+                              onChange={e => setRejectionReason(e.target.value)}
+                              style={inputStyle}
+                            />
+                            <button style={sendBtnStyle} onClick={() => handleReject(lr.id)}>Gönder</button>
+                            <button style={cancelBtnStyle} onClick={() => { setRejectingId(null); setRejectionReason(''); }}>İptal</button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 24, gap: 12 }}>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    background: WHITE,
+                    color: currentPage === 1 ? '#ffcc80' : ORANGE_DARK,
+                    border: '1.5px solid ' + ORANGE,
+                    borderRadius: 8,
+                    padding: '7px 18px',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                    transition: 'background 0.2s',
+                    opacity: currentPage === 1 ? 0.6 : 1,
+                  }}
+                >Önceki</button>
+                <span style={{ color: ORANGE_DARK, fontWeight: 600, fontSize: 16 }}>
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    background: WHITE,
+                    color: currentPage === totalPages ? '#ffcc80' : ORANGE_DARK,
+                    border: '1.5px solid ' + ORANGE,
+                    borderRadius: 8,
+                    padding: '7px 18px',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 8px 0 ' + ORANGE + '11',
+                    transition: 'background 0.2s',
+                    opacity: currentPage === totalPages ? 0.6 : 1,
+                  }}
+                >Sonraki</button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
