@@ -1,0 +1,195 @@
+/* Genel sayfa düzeni */
+body, html {
+    font-family: var(--font-sans, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+    background: var(--background) !important;
+    margin: 0;
+    padding: 0;
+    color: var(--text-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
+}
+
+/* Kart ve ana kutular */
+.card, .main-card, .dashboard-card, .profile-card, .table-card {
+    background: var(--surface);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px 0 rgba(37,99,235,0.04);
+    color: var(--text-primary);
+    padding: 32px;
+    margin-bottom: 32px;
+}
+
+/* Form stilleri */
+form {
+    background: var(--surface);
+    padding: 25px 30px;
+    margin: 0 auto 40px;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px 0 rgba(37,99,235,0.04);
+    color: var(--text-primary);
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="password"],
+form input[type="date"],
+form select {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    background: var(--background);
+    color: var(--text-primary);
+    transition: border-color 0.3s, background 0.2s;
+    font-weight: 500;
+}
+
+form input[type="text"]:focus,
+form input[type="number"]:focus,
+form input[type="password"]:focus,
+form input[type="date"]:focus,
+form select:focus {
+    border-color: var(--primary);
+    outline: none;
+    background: var(--surface);
+}
+
+form button {
+    width: 100%;
+    background: var(--primary);
+    color: var(--surface);
+    font-weight: 700;
+    padding: 14px 0;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px 0 rgba(37,99,235,0.08);
+    transition: background 0.3s;
+    margin-top: 8px;
+}
+
+form button:hover {
+    background: var(--secondary);
+}
+
+label {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+/* Tablo stilleri */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px 0 rgba(37,99,235,0.04);
+    color: var(--text-primary);
+}
+
+thead {
+    background: var(--background);
+    color: var(--text-primary);
+    text-align: left;
+}
+
+thead th {
+    padding: 14px 20px;
+    font-weight: 600;
+    font-size: 1rem;
+    border-bottom: 2px solid var(--border);
+}
+
+tbody tr {
+    background: var(--surface);
+    transition: background 0.2s;
+}
+
+tbody tr:nth-child(even) {
+    background: var(--background);
+}
+
+tbody tr:hover {
+    background: var(--border);
+}
+
+tbody td {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+}
+
+/* Badge, uyarı, info kutuları */
+.badge, .info-box, .alert-box {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--info);
+    color: var(--surface);
+    margin-bottom: 8px;
+}
+
+.error-box {
+    background: var(--error);
+    color: var(--surface);
+}
+
+.success-box {
+    background: var(--success);
+    color: var(--surface);
+}
+
+.warning-box {
+    background: var(--warning);
+    color: var(--surface);
+}
+
+.secondary-box {
+    background: var(--secondary);
+    color: var(--surface);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    form, table, .card, .main-card, .dashboard-card, .profile-card, .table-card {
+      width: 100%;
+      margin: 0 10px 24px 10px;
+      padding: 18px;
+    }
+    thead {
+      display: none;
+    }
+    tbody td {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: right;
+      padding-left: 50%;
+      position: relative;
+    }
+    tbody td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 15px;
+      width: 45%;
+      padding-left: 15px;
+      font-weight: 600;
+      text-align: left;
+      color: var(--text-secondary);
+    }
+}
+  
