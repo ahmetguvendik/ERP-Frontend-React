@@ -10,6 +10,9 @@ import ManagerLeaveRequests from './components/ManagerLeaveRequest';
 import ApprovedLeaveRequestList from './components/ApprovedLeaveRequestList';
 import ManagerPurchaseList from './components/ManagerPurchaseList';
 import CreateUser from './components/CreateUser';
+import ManagerApprovedPurchaseList from './components/ManagerApprovedPurchaseList';
+import AddOffer from './components/AddOffer';
+import UpdatePurchase from './components/UpdatePurchase';
 import axios from 'axios';
 
 const ORANGE = '#ff9100';
@@ -159,13 +162,18 @@ function MainContent({ user, setUser, isLoggedIn, setIsLoggedIn }) {
           <SidebarLink to="/view-purchase" label="Satın Alma Taleplerim" />
           <SidebarLink to="/create-leave" label="İzin Talebi Oluştur" />
           <SidebarLink to="/view-leave" label="İzin Taleplerim" />
-          {user?.roleName === 'HR' && (
+          {user?.roleNames?.includes('Purchase') && (
+            <>
+              <SidebarLink to="/approved-purchase" label="Onaylanan Satın Almalar" />
+            </>
+          )}
+          {user?.roleNames?.includes('HR') && (
             <>
               <SidebarLink to="/approved-leave-requests" label="Onay Bekleyen İzinler" />
               <SidebarLink to="/create-user" label="Kullanıcı Ekle" />
             </>
           )}
-          {user?.roleName === 'Manager' && (
+          {user?.roleNames?.includes('Manager') && (
             <>
               <SidebarLink to="/manager-leave-requests" label="Yönetici İzin Talepleri" />
               <SidebarLink to="/manager-purchase-requests" label="Satın Alma Talepleri (Yönetici)" />
@@ -189,10 +197,13 @@ function MainContent({ user, setUser, isLoggedIn, setIsLoggedIn }) {
             <Route path="/view-purchase" element={<PurchaseList reload={reload} userInfo={userInfo} />} />
             <Route path="/create-leave" element={<LeaveRequestForm userInfo={userInfo} />} />
             <Route path="/view-leave" element={<LeaveRequestList userInfo={userInfo} />} />
-            <Route path="/manager-leave-requests" element={user?.roleName === 'Manager' ? <ManagerLeaveRequests userInfo={userInfo} /> : <Navigate to="/login" />} />
-            <Route path="/approved-leave-requests" element={user?.roleName === 'HR' ? <ApprovedLeaveRequestList userInfo={userInfo} /> : <Navigate to="/login" />} />
-            <Route path="/manager-purchase-requests" element={user?.roleName === 'Manager' ? <ManagerPurchaseList userInfo={userInfo} /> : <Navigate to="/login" />} />
-            <Route path="/create-user" element={user?.roleName === 'HR' ? <CreateUser userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/manager-leave-requests" element={user?.roleNames?.includes('Manager') ? <ManagerLeaveRequests userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/approved-leave-requests" element={user?.roleNames?.includes('HR') ? <ApprovedLeaveRequestList userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/manager-purchase-requests" element={user?.roleNames?.includes('Manager') ? <ManagerPurchaseList userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/create-user" element={user?.roleNames?.includes('HR') ? <CreateUser userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/approved-purchase" element={user?.roleNames?.includes('Purchase') ? <ManagerApprovedPurchaseList userInfo={userInfo} /> : <Navigate to="/login" />} />
+            <Route path="/add-offer/:purchaseId" element={user?.roleNames?.includes('Purchase') ? <AddOffer /> : <Navigate to="/login" />} />
+            <Route path="/update-purchase/:id" element={<UpdatePurchase />} />
             <Route path="*" element={<Navigate to="/user-profile" />} />
           </Routes>
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const URGENCY_MAP = {
   1: 'Çok Düşük',
@@ -189,6 +190,20 @@ const ManagerPurchaseList = ({ userInfo }) => {
                             transition: 'background 0.2s',
                             boxShadow: '0 2px 8px 0 rgba(255,145,0,0.10)',
                           }} onClick={() => setRejectingIdx(idx)}>Reddet</button>
+                          <Link to={`/update-purchase/${p.id}`} style={{
+                            background: '#fff',
+                            color: '#ff9100',
+                            border: '1.5px solid #ff9100',
+                            borderRadius: 8,
+                            padding: '6px 16px',
+                            fontWeight: 600,
+                            fontSize: 14,
+                            cursor: 'pointer',
+                            marginLeft: 8,
+                            textDecoration: 'none',
+                            transition: 'background 0.2s',
+                            boxShadow: '0 2px 8px 0 rgba(255,145,0,0.10)',
+                          }}>Güncelle</Link>
                           {rejectingIdx === idx && (
                             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                               <input
